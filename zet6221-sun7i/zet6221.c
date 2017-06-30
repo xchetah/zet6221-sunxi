@@ -18,8 +18,10 @@
 #include <linux/init.h>
 #include <linux/i2c.h>
 #include <linux/input.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/pm.h>
 #include <linux/earlysuspend.h>
+#endif
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -874,7 +876,9 @@ struct zet622x_tsdrv
 #ifdef FEATURE_FRAM_RATE
 	struct timer_list zet622x_ts_timer_task2;
 #endif ///< for FEATURE_FRAM_RATE
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;
+	#endif
 	unsigned int gpio; 			///< GPIO used for interrupt of TS1
 	unsigned int irq;
 };
@@ -4288,6 +4292,7 @@ static int zet622x_resume_download_thread(void *arg)
 }
 #endif ///< for FEATURE_FW_UPGRADE
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
 ///************************************************************************
 ///   [function]:  zet622x_ts_late_resume
 ///   [parameters]:
@@ -4353,6 +4358,7 @@ static void zet622x_ts_early_suspend(struct early_suspend *handler)
 #endif ///< for FEATURE_SUSPEND_CLEAN_FINGER
 	return;	        
 }
+#endif //#ifdef CONFIG_HAS_EARLYSUSPEND
 
 ///************************************************************************
 ///	zet622x_i2c_driver
@@ -5461,7 +5467,9 @@ static int __devexit zet622x_ts_remove(struct i2c_client *dev)
 	///------------------------------------------///
 	/// unregister early_suspend
 	///------------------------------------------///
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&zet6221_ts->early_suspend);
+	#endif
 
 	input_unregister_device(zet6221_ts->input);
 	input_free_device(zet6221_ts->input);
@@ -5666,12 +5674,13 @@ static int __devinit zet622x_ts_probe(struct i2c_client *client, const struct i2
 	///------------------------------------------///
 	/// Config early_suspend
 	///------------------------------------------///
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	printk("[ZET] : ==register_early_suspend =\n");
 	zet6221_ts->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB;
 	zet6221_ts->early_suspend.suspend = zet622x_ts_early_suspend;
 	zet6221_ts->early_suspend.resume = zet622x_ts_late_resume;
 	register_early_suspend(&zet6221_ts->early_suspend);
-
+	#endif 
 	zet6221_ts->input = input_dev;
 
 	input_set_drvdata(zet6221_ts->input, zet6221_ts);
@@ -5742,7 +5751,9 @@ LABEL_DOWNLOAD_FAIL:
 #ifndef FEATURE_INT_FREE
 LABEL_REQUEST_IRQ_FAIL:
 #endif ///< for FEATURE_INT_FREE
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&zet6221_ts->early_suspend);
+	#endif
 	//enable_irq(SW_INT_IRQNO_PIO);
 	input_free_device(input_dev);
 	sw_gpio_irq_free(int_handle);

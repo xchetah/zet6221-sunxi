@@ -18,8 +18,10 @@
 #include <linux/init.h>
 #include <linux/i2c.h>
 #include <linux/input.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/pm.h>
 #include <linux/earlysuspend.h>
+#endif
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
@@ -42,7 +44,7 @@
 #include <mach/irqs.h>
 #include <mach/system.h>
 #include <mach/hardware.h>
-#include <mach/sys_config.h>
+#include <plat/sys_config.h>
 
 #include "ctp_platform_ops.h"
 #include "zet6221_fw.h"
@@ -137,7 +139,7 @@
 ///=========================================================================================///
 ///  15. Device Name 
 ///=========================================================================================///
-#define ZET_TS_ID_NAME				"zet6221-ts"
+#define ZET_TS_ID_NAME				"zet6221_ts"
 #define MJ5_TS_NAME				ZET_TS_ID_NAME
 
 ///=========================================================================================///
@@ -867,7 +869,9 @@ struct zet622x_tsdrv
 #ifdef FEATURE_FRAM_RATE
 	struct timer_list zet622x_ts_timer_task2;
 #endif ///< for FEATURE_FRAM_RATE
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;
+	#endif
 	unsigned int gpio; 			///< GPIO used for interrupt of TS1
 	unsigned int irq;
 };
@@ -1185,7 +1189,7 @@ static int ctp_fetch_sysconfig_para(void)
 	char name[I2C_NAME_SIZE];
 	__u32 twi_addr = 0;
 
-	script_parser_value_type_t type = SCIRPT_PARSER_VALUE_TYPE_STRING;
+	script_parser_value_type_t type = SCRIPT_PARSER_VALUE_TYPE_STRING;
 
 	printk("[ZET]: %s. \n", __func__);
 
@@ -4628,6 +4632,7 @@ static int zet622x_resume_download_thread(void *arg)
 }
 #endif ///< for FEATURE_FW_UPGRADE
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
 ///************************************************************************
 ///   [function]:  zet622x_ts_late_resume
 ///   [parameters]:
@@ -4693,6 +4698,8 @@ static void zet622x_ts_early_suspend(struct early_suspend *handler)
 #endif ///< for FEATURE_SUSPEND_CLEAN_FINGER
 	return;	        
 }
+#endif //#ifdef CONFIG_HAS_EARLYSUSPEND
+
 
 ///************************************************************************
 ///	zet622x_i2c_driver
@@ -5801,7 +5808,9 @@ static int __devexit zet622x_ts_remove(struct i2c_client *dev)
 	///------------------------------------------///
 	/// unregister early_suspend
 	///------------------------------------------///
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&zet6221_ts->early_suspend);
+	#endif
 
 	input_unregister_device(zet6221_ts->input);
 	input_free_device(zet6221_ts->input);
@@ -6005,6 +6014,7 @@ static int __devinit zet622x_ts_probe(struct i2c_client *client, const struct i2
 		goto LABEL_DEV_REGISTER_FAIL;
 	}
 
+	#ifdef CONFIG_HAS_EARLYSUSPEND
 	///------------------------------------------///
 	/// Config early_suspend
 	///------------------------------------------///
@@ -6013,7 +6023,8 @@ static int __devinit zet622x_ts_probe(struct i2c_client *client, const struct i2
 	zet6221_ts->early_suspend.suspend = zet622x_ts_early_suspend;
 	zet6221_ts->early_suspend.resume = zet622x_ts_late_resume;
 	register_early_suspend(&zet6221_ts->early_suspend);
-
+	#endif
+	
 	zet6221_ts->input = input_dev;
 
 	input_set_drvdata(zet6221_ts->input, zet6221_ts);
