@@ -109,8 +109,9 @@
 ///---------------------------------------------------------------------------------///
 ///  10. Mainchip A13
 ///---------------------------------------------------------------------------------///
+#ifdef CONFIG_ARCH_SUN5I
 #define FEATURE_FROCE_A13			///< 主芯片若為全智A13，請開啟，否則關閉
-
+#endif
 ///---------------------------------------------------------------------------------///
 ///  11. Dummy report (without pull high resistor)
 ///---------------------------------------------------------------------------------///
@@ -612,8 +613,11 @@ static __u32 twi_id = 0;
 static u16 pcode_addr[8]	= {0x3DF1,0x3DF4,0x3DF7,0x3DFA,0x3EF6,0x3EF9,0x3EFC,0x3EFF}; ///< default pcode addr: zet6221
 static u16 pcode_addr_6221[8]	= {0x3DF1,0x3DF4,0x3DF7,0x3DFA,0x3EF6,0x3EF9,0x3EFC,0x3EFF}; ///< zet6221 pcode_addr[8]
 static u16 pcode_addr_6223[8]	= {0x7BFC,0x7BFD,0x7BFE,0x7BFF,0x7C04,0x7C05,0x7C06,0x7C07}; ///< zet6223 pcode_addr[8]
-
+#ifdef CONFIG_ARCH_SUN5I
 static __u32 mainchip_type	= 0xA13;
+#else
+static __u32 mainchip_type	= 0xA10;
+#endif
 static __u32 ctp_irq_no		= 0;
 static int dummy_report_cnt	= 0;
 static int charger_status	= 0;	///< 0 : discharge,  1 : charge
