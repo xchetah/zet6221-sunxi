@@ -46,7 +46,7 @@
 #include <mach/irqs.h>
 #include <mach/system.h>
 #include <mach/hardware.h>
-#include <mach/sys_config.h>
+#include <plat/sys_config.h>
 #include <linux/ctp.h>
 #include <linux/input/mt.h>
 #include <linux/gpio.h>
