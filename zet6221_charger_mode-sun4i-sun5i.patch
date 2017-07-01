@@ -1,0 +1,41 @@
+diff --git a/drivers/input/touchscreen/zet6221.c b/drivers/input/touchscreen/zet6221.c
+index fc34a31..6bb8227 100644
+--- a/drivers/input/touchscreen/zet6221.c
++++ b/drivers/input/touchscreen/zet6221.c
+@@ -146,10 +146,11 @@
+ ///=========================================================================================///
+ ///  16. Charge mode  
+ ///=========================================================================================///
+-//#define FEATURE_CHARGER_MODE		///< 請修改AXP20-sply.c，將充電模式啟動
++#define FEATURE_CHARGER_MODE		///< 請修改AXP20-sply.c，將充電模式啟動
+ 
+ #ifdef FEATURE_CHARGER_MODE
+-extern int charger_on;			///< 請在AXP20-sply.c中宣告此變量，並在充電時，將之設為1，反之0
++extern bool *axp_charger_on;			///< 請在AXP20-sply.c中宣告此變量，並在充電時，將之設為1，反之0
++#define charger_on (*axp_charger_on)
+ #else ///< FEATURE_CHARGER_MODE
+ int charger_on  = 0;			///< 全設0，無充電模式功能
+ #endif ///< for FEATURE_CHARGER_MODE
+diff --git a/drivers/power/axp_power/axp20-sply.c b/drivers/power/axp_power/axp20-sply.c
+index 217e70a..fbca8d6 100644
+--- a/drivers/power/axp_power/axp20-sply.c
++++ b/drivers/power/axp_power/axp20-sply.c
+@@ -43,7 +43,8 @@
+ #else
+ #define DBG_PSY_MSG(format,args...)   do {} while (0)
+ #endif
+-
++bool *axp_charger_on;		//added for zet6221 charger mode auto detection
++EXPORT_SYMBOL(axp_charger_on);
+ static int pmu_used2 = 0;
+ static int gpio_adp_hdle = 0;
+ static int pmu_suspendpwroff_vol = 0;
+@@ -1500,6 +1501,8 @@ static int axp_battery_probe(struct platform_device *pdev)
+   charger->disvbat			= 0;
+   charger->disibat			= 0;
+ 
++  axp_charger_on = &charger->is_on;
++	
+   ret = axp_battery_first_init(charger);
+   if (ret)
+     goto err_charger_init;
